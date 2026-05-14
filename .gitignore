@@ -1,0 +1,28 @@
+# Based on https://github.com/github/gitignore/blob/main/Nextjs.gitignore
+
+# Depdendencies
+node_modules
+
+# Local env files
+.env
+.env*
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Mac
+.DS_Store
+
+# sst
+.sst
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

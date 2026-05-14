@@ -1,0 +1,27 @@
+{
+  "name": "exoplanet-explorer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "deploy:dev": "sst deploy --stage dev",
+    "deploy:prod": "sst deploy --stage prod",
+    "dev": "sst dev --stage dev",
+    "remove:dev": "sst remove --stage dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1045.0",
+    "@aws-sdk/lib-dynamodb": "^3.1045.0",
+    "@types/aws-lambda": "8.10.161",
+    "@types/node": "^25.7.0",
+    "sst": "^4.14.1",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "sst": "4.14.1"
+  }
+}
