@@ -125,5 +125,57 @@ export interface Record {
     }
 }
 
+export type PlanetClass = 
+    "rocky" |
+    "volatile" |
+    "icy" |
+    "lava" |
+    "ice-giant" |
+    "gas-giant";
+
+export interface PlanetMaterialPaletteRange {
+    r: [number, number];
+    g: [number, number];
+    b: [number, number];
+}
+
+export interface PlanetMaterialPaletteRanges {
+    deep: PlanetMaterialPaletteRange;
+    mid: PlanetMaterialPaletteRange;
+    high: PlanetMaterialPaletteRange;
+    atmosphere: PlanetMaterialPaletteRange;
+    fresnel: PlanetMaterialPaletteRange;
+}
+
+export interface PlanetMaterialPalette {
+    deep: string;
+    mid: string;
+    high: string;
+    atmosphere: string;
+    fresnel: string;
+}
+
+export interface PlanetMaterialRecipe {
+    derivationVersion: "v1";
+    seed: string;
+    planetClass: PlanetClass;
+    isGaseous: boolean;
+    palette: PlanetMaterialPalette;
+
+    surface: {
+        noiseScale: number;
+        noiseAlpha: number;
+        depthAlpha: number;
+        roughness: number;
+        metalness: number;
+    }
+
+    atmosphere: {
+        fresnelPower: number;
+        opacity: number;
+        scale: number;
+    }
+}
+
 export type PlanetRecord = Planet & Record;
 export type SystemRecord = System & Record;
