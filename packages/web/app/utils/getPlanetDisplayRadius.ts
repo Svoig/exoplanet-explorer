@@ -6,6 +6,7 @@
 export function getPlanetDisplayRadius(radiusEarth: number) {
     // Min and max observed are from queries to the exoplanet API
     const minObservedRadiusEarth = 0.31;
+    // const maxObservedRadiusEarth = 87.21;
     const maxObservedRadiusEarth = 87.21;
 
     const minSceneRadius = 0.55;

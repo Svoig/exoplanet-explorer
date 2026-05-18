@@ -164,8 +164,10 @@ export interface PlanetMaterialRecipe {
 
     surface: {
         noiseScale: number;
+        noiseOffset: [number, number, number];
         noiseAlpha: number;
         depthAlpha: number;
+        displacementStrength: number;
         roughness: number;
         metalness: number;
     }

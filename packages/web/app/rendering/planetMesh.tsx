@@ -23,7 +23,7 @@ export function PlanetMesh({ planet }:
         return recipe && radius && (
             <group>
                 <mesh>
-                    <sphereGeometry args={[scaledRadius, 128, 128]} />
+                    <sphereGeometry args={[scaledRadius, 256, 256]} />
                     <PlanetSurfaceMaterial recipe={recipe} />
                 </mesh>
 

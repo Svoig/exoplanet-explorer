@@ -14,7 +14,7 @@ export function PlanetAtmosphereMaterial({ recipe }:
                 <Color color={recipe.palette.atmosphere} alpha={0.025} mode="normal" />
 
                 <Fresnel
-                    color={recipe.palette.fresnel}
+                    color={recipe.palette.atmosphere}
                     alpha={recipe.atmosphere.opacity}
                     mode="screen"
                     power={recipe.atmosphere.fresnelPower}

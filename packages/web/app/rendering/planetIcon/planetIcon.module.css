@@ -1,0 +1,32 @@
+.planetIconContainer {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+}
+
+.planetIconPlanet {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 100px;
+}
+
+.planetIconPlanetAtmosphere, .planetIconPlanetSurface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 100%;
+}
+
+.planetIconPlanetAtmosphere {
+    width: 100px;
+    height: 100px;
+}
+
+.planetIconPlanetSurface {
+    transform: scale(0.85);
+    width: 100px;
+    height: 100px;
+}

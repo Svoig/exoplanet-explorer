@@ -2,7 +2,8 @@ import seedrandom from "seedrandom";
 import type {
     Planet,
     PlanetMaterialRecipe,
-    PlanetMaterialPalette
+    PlanetMaterialPalette,
+    PlanetClass
 } from '../../../types';
 import { getSeededColorPaletteByPlanetComposition } from './colorPalettes';
 
@@ -40,6 +41,19 @@ function classifyComposition(radiusEarth: number, tempK: number) {
     if (radiusEarth < 3.5) return "volatile";
     if (radiusEarth < 8) return "ice-giant";
     return "gas-giant";
+}
+
+function getDisplacementStrengthByPlanetComposition(composition: PlanetClass): number {
+    const displacementByClass = {
+        rocky: 0.028,
+        icy: 0.018,
+        volatile: 0.010,
+        lava: 0.040,
+        "ice-giant": 0.004,
+        "gas-giant": 0.0015
+    };
+
+    return displacementByClass[composition] ?? 0;
 }
 
 export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe | null {
@@ -84,8 +98,17 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
     //     * (isGaseous ? lerp(2, 5, tempNormalized) : lerp(3, 8, densityNormalized));
     const noiseScale = (isGaseous ? lerp(2, 5, tempNormalized) : lerp(3, 8, densityNormalized));
 
+    // Offset to use for multiple material inputs, like displacement and color to make them feel related
+    const noiseOffset: [number, number, number] = [
+        rng() * 100,
+        rng() * 100,
+        rng() * 100,
+    ];
+
     // Used to communicate atmosphere thickness
     const atmosphereOpacity = isGaseous ? 0.45 : clamp(radius / densityGCM3 / (tempK / 300), 0.04, 0.22);
+
+    const displacementStrength = getDisplacementStrengthByPlanetComposition(composition);
 
     return {
         derivationVersion: "v1",
@@ -95,8 +118,10 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
         palette: colorPalette,
         surface: {
             noiseScale,
+            noiseOffset,
             noiseAlpha: isGaseous ? 0.18 : 0.28,
             depthAlpha: 0.45,
+            displacementStrength,
             roughness,
             metalness: densityGCM3 > 7 ? 0.08 : 0
         },
