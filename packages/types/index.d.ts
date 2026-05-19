@@ -1,3 +1,5 @@
+import type { Texture } from "three";
+
 export type NasaPlanetRow = {
     pl_name: string;
     hostname: string | null;

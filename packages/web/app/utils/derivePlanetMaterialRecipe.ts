@@ -1,4 +1,5 @@
 import seedrandom from "seedrandom";
+import MurmurHash3 from "imurmurhash";
 import type {
     Planet,
     PlanetMaterialRecipe,
@@ -6,6 +7,7 @@ import type {
     PlanetClass
 } from '../../../types';
 import { getSeededColorPaletteByPlanetComposition } from './colorPalettes';
+import { getPlanetTextures } from "./getPlanetTextures";
 
 /**
  * Tracking the version in case I change the algorithm later.
@@ -45,12 +47,12 @@ function classifyComposition(radiusEarth: number, tempK: number) {
 
 function getDisplacementStrengthByPlanetComposition(composition: PlanetClass): number {
     const displacementByClass = {
-        rocky: 0.028,
-        icy: 0.018,
-        volatile: 0.010,
-        lava: 0.040,
-        "ice-giant": 0.004,
-        "gas-giant": 0.0015
+        rocky: 0.08,
+        icy: 0.18,
+        volatile: 0.10,
+        lava: 0.40,
+        "ice-giant": 0.04,
+        "gas-giant": 0.015
     };
 
     return displacementByClass[composition] ?? 0;
@@ -123,12 +125,12 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
             depthAlpha: 0.45,
             displacementStrength,
             roughness,
-            metalness: densityGCM3 > 7 ? 0.08 : 0
+            metalness: densityGCM3 > 7 ? 0.08 : 0,
         },
         atmosphere: {
-            fresnelPower: isGaseous ? 1.7 : 2.8,
+            fresnelPower: isGaseous ? 2.7 : 4.8,
             opacity: atmosphereOpacity,
-            scale: isGaseous ? 1.05 : 1.03
+            scale: isGaseous ? 1.1 : 1.09
         }
     };
 

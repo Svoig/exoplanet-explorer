@@ -1,6 +1,5 @@
 "use client"
 
-import { useRef } from "react";
 import { Canvas } from '@react-three/fiber';
 import { Planet } from '../../../types';
 import { PlanetMesh } from './planetMesh';
@@ -10,7 +9,6 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing';
 export function Renderer({ type, data }:
     { type: "planet" | "star", data: Planet }
 ) {
-    const sunRef = useRef(null);
     return (
         <div style={{width: '100%', height: '500px'}}>
             <Canvas>
@@ -18,7 +16,7 @@ export function Renderer({ type, data }:
                     <Bloom />
                 </EffectComposer>
                 <CameraControls />
-                <directionalLight position={[3, 3, 5]} intensity={10} />
+                <directionalLight position={[10, 3, 8]} intensity={12} />
                 <PlanetMesh planet={data} />
             </Canvas>
         </div>
