@@ -124,13 +124,14 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
             noiseAlpha: isGaseous ? 0.18 : 0.28,
             depthAlpha: 0.45,
             displacementStrength,
-            roughness,
-            metalness: densityGCM3 > 7 ? 0.08 : 0,
+            roughness: isGaseous ? 1.0 : roughness,
+            metalness: isGaseous ? 0.0 : densityGCM3 > 7 ? 0.08 : 0,
         },
         atmosphere: {
             fresnelPower: isGaseous ? 2.7 : 4.8,
             opacity: atmosphereOpacity,
-            scale: isGaseous ? 1.1 : 1.09
+            // AI said 1.1 for gaseous, but 1.02 looks better to me (see toi-1408-b)
+            scale: isGaseous ? 1.02 : 1.09
         }
     };
 

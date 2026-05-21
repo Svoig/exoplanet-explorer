@@ -1,4 +1,4 @@
-import { PlanetMaterialRecipe } from "../../../../types";
+import type { PlanetMaterialRecipe } from "../../../../types";
 import styles from "./planetIcon.module.css";
 
 export function PlanetIcon({ recipe }: { recipe: PlanetMaterialRecipe}) {
@@ -7,6 +7,6 @@ export function PlanetIcon({ recipe }: { recipe: PlanetMaterialRecipe}) {
             <div className={styles.planetIconPlanetAtmosphere} style={{backgroundColor: recipe.palette.atmosphere}} />
             <div className={styles.planetIconPlanetSurface} style={{backgroundColor: recipe.palette.deep}} />
         </div>
-        <p className="planet-icon-composition">{recipe.planetClass}</p>
+        <p className={styles.planetIconComposition}>{recipe.planetClass}</p>
     </div>
 }
