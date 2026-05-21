@@ -10,13 +10,14 @@ export default $config({
       providers: {
         aws: {
           region: "us-east-2",
-          profile: "exoplanet-dev"
+          profile: input?.stage === "production" ? "exoplanet-production" : "exoplanet-dev"
         }
       }
     };
   },
   async run() {
     const systemCatalog = new sst.aws.Dynamo("SystemCatalog", {
+      deletionProtection: true,
       fields: {
         pk: "string",
         sk: "string",
@@ -48,11 +49,12 @@ export default $config({
 
     const web = new sst.aws.Nextjs("Web", {
       path: "packages/web",
-      link: [systemCatalog, uploads],
+      // TODO: Add `uploads` back in when using S3
+      // link: [systemCatalog, uploads],
+      link: [systemCatalog],
       environment: {
         STAGE: $app.stage,
       },
-
       // Add when domain is set up through Route53
       // domain: {
       //   name: "some-cool-domain.com"
@@ -65,6 +67,5 @@ export default $config({
       uploadsBucket: uploads.name,
       ingestSeedExoplanetsFunction: ingestSeedExoplanets.name
     };
-
   },
 });

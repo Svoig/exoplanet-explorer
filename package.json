@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "deploy:dev": "sst deploy --stage dev",
-    "deploy:prod": "sst deploy --stage prod",
+    "deploy:prod": "sst deploy --stage production",
     "dev": "sst dev --stage dev",
     "remove:dev": "sst remove --stage dev",
     "test": "echo \"Error: no test specified\" && exit 1"
