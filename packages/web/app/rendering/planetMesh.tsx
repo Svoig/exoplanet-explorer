@@ -1,10 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { BackSide, NormalBlending } from "three";
 import type { Planet } from "../../../types";
 import { PlanetSurfaceMaterial } from "./planetSurfaceMaterial";
 import { derivePlanetMaterialRecipe } from "../utils/derivePlanetMaterialRecipe";
 import { getPlanetDisplayRadius } from "../utils/getPlanetDisplayRadius";
-import { AdditiveBlending, BackSide } from "three";
-// import { PlanetAtmosphereMaterial } from "./planetAtmosphereMaterial";
 import "./planetAtmosphereMaterial";
 
 export function PlanetMesh({ planet }: 
@@ -15,11 +14,6 @@ export function PlanetMesh({ planet }:
         const scaledRadius = getPlanetDisplayRadius(radius);
 
 
-        useEffect(() => {
-            console.log(radius);
-            console.log(recipe);
-        }, [radius, recipe]);
-
         return recipe && radius && (
             <group>
                 <mesh>
@@ -29,17 +23,17 @@ export function PlanetMesh({ planet }:
 
                 <mesh scale={recipe.atmosphere.scale}>
                     <sphereGeometry args={[scaledRadius, 128, 128]} />
-                    {/* <PlanetAtmosphereMaterial recipe={recipe} /> */}
                     <planetAtmosphereMaterial
                         side={BackSide}
                         transparent
                         depthWrite={false}
                         depthTest={true}
-                        blending={AdditiveBlending}
+                        blending={NormalBlending}
+                        premultipliedAlpha={true}
                         uColor={recipe.palette.atmosphere}
                         uOpacity={recipe.atmosphere.opacity}
                         uPower={recipe.atmosphere.fresnelPower}
-                        uIntensity={4.0}
+                        uIntensity={3.0}
                     />
                 </mesh>
             </group>

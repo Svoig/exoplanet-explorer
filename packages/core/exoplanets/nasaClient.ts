@@ -3,12 +3,15 @@ import type { NasaPlanetRow } from "../../types";
 const NASA_TAP_URL = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync";
 
 export const MINIMAL_DEV_SYSTEMS = [
+  // Famous systems
   "TRAPPIST-1",
   "Proxima Cen",
   "Barnard's Star",
   "Kepler-186",
   "TOI-700",
   "K2-18",
+  // Systems with at least one displayable gaseous planet
+  "TOI-1408"
 ];
 
 
