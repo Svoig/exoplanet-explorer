@@ -16,14 +16,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geo);
+  --font-mono: var(--font-geo);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geo), Arial, Helvetica, sans-serif;
 }
 
 body::before {
@@ -121,7 +121,7 @@ a {
 
 .eyebrow {
   color: var(--mint);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-geo), monospace;
   font-size: 0.78rem;
   letter-spacing: 0.18em;
   margin-bottom: 18px;
@@ -248,7 +248,7 @@ a {
 .stat-label {
   color: var(--muted);
   display: block;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-geo), monospace;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   margin-bottom: 8px;
@@ -301,7 +301,7 @@ a {
   color: var(--muted);
   display: flex;
   flex-wrap: wrap;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-geo), monospace;
   font-size: 0.78rem;
   gap: 10px;
 }

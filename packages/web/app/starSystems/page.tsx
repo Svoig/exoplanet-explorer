@@ -32,7 +32,7 @@ export default async function StarSystemsPage() {
           <h1>Star Systems</h1>
         </div>
         <p>
-          A compact survey board for seeded host stars and their known planets.
+          A compact survey board for famous and interesting stars and their known planets.
           Open a planet to inspect its measured parameters and generated visual
           model.
         </p>

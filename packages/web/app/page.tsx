@@ -16,9 +16,9 @@ export default function Home() {
       <section className="hero">
         <div>
           <p className="eyebrow">NASA Archive Visual Index</p>
-          <h1>Survey distant worlds with instrument-grade clarity.</h1>
+          <h1>Survey distant worlds based on NASA telemetry data.</h1>
           <p className="hero-copy">
-            Browse seeded exoplanet systems, inspect orbital and stellar data,
+            Browse exoplanet systems, inspect orbital and stellar data,
             and open procedural planet views generated from the catalogue.
           </p>
           <div className="button-row">

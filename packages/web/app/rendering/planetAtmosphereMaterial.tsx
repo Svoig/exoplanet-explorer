@@ -10,29 +10,6 @@ declare module "@react-three/fiber" {
     }
 }
 
-// export function PlanetAtmosphereMaterial({ recipe }:
-//     { recipe: PlanetMaterialRecipe}) {
-//         return (
-//             <LayerMaterial
-//                 side={BackSide}
-//                 transparent
-//                 depthWrite={false}
-//                 lighting="basic"
-//                 blending={AdditiveBlending}
-//             >
-//                 <Color color={recipe.palette.atmosphere} alpha={0.025} mode="normal" />
-
-//                 <Fresnel
-//                     color={recipe.palette.atmosphere}
-//                     alpha={recipe.atmosphere.opacity}
-//                     mode="add"
-//                     power={recipe.atmosphere.fresnelPower}
-//                     intensity={2.0}
-//                 />
-//             </LayerMaterial>
-//         );
-//     }
-
 export const PlanetAtmosphereMaterial = shaderMaterial(
     {
         uColor: new Color("#a8c2ff"),
