@@ -2,6 +2,8 @@ import type { NasaPlanetRow } from "../../types";
 
 const NASA_TAP_URL = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync";
 
+// NOTE: Copy/pasted into packages/web/server/db/systemCatalog.ts
+// TODO: Move to a shared space
 export const MINIMAL_DEV_SYSTEMS = [
   // Famous systems
   "TRAPPIST-1",
