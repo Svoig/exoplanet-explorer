@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { PlanetRecord, SystemRecord } from "../../../types";
 import {
   listPlanetsInSystem,
-  listStarSystems,
+  listSeedSystems,
 } from "../server/db/systemCatalog";
 
 export default async function StarSystemsPage() {
-  const systems = (await listStarSystems()) as SystemRecord[];
+  const systems = (await listSeedSystems()) as SystemRecord[];
   const systemsWithPlanets = await Promise.all(
     systems.map(async (system) => ({
       system,
