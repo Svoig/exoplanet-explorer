@@ -9,19 +9,22 @@
     "remove:dev": "sst remove --stage dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": ">=22.22.2"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1045.0",
-    "@aws-sdk/lib-dynamodb": "^3.1045.0",
     "@types/aws-lambda": "8.10.161",
     "@types/node": "^25.7.0",
     "sst": "^4.14.1",
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1045.0",
+    "@aws-sdk/lib-dynamodb": "^3.1045.0",
     "sst": "4.14.1"
   }
 }

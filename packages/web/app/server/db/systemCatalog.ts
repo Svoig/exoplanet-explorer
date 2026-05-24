@@ -1,10 +1,25 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
+    BatchGetCommand,
     DynamoDBDocumentClient,
     GetCommand,
     QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { Resource } from "sst";
+
+// NOTE: Copy/pasted from packages/core/exoplanets/nasaClient.ts
+// TODO: Move to a shared space
+const MINIMAL_DEV_SYSTEMS = [
+  // Famous systems
+  "TRAPPIST-1",
+  "Proxima Cen",
+  "Barnard's Star",
+  "Kepler-186",
+  "TOI-700",
+  "K2-18",
+  // Systems with at least one displayable gaseous planet
+  "TOI-1408"
+];
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -23,6 +38,33 @@ export async function listStarSystems() {
     );
 
     return result.Items ?? [];
+}
+
+export async function listSeedSystems() {
+    const seedSystemIds = MINIMAL_DEV_SYSTEMS.map(normalizeHostName);
+    const result = await client.send(
+        new BatchGetCommand({
+            RequestItems: {
+                [tableName]: {
+                    Keys: seedSystemIds.map(systemId => ({
+                        pk: `SYSTEM#${systemId}`,
+                        sk: "PROFILE"
+                    }))
+                }
+            }
+        })
+    );
+
+    const systems = result.Responses?.[tableName] ?? [];
+    const systemsById = new Map(systems.map(system => [system.id, system]));
+
+    return seedSystemIds
+        .map(systemId => systemsById.get(systemId))
+        .filter(system => system != null);
+}
+
+function normalizeHostName(host: string): string {
+    return host.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 export async function getSystem(systemId: string) {

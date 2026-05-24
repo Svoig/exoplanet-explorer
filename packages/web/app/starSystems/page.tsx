@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { PlanetRecord, SystemRecord } from "../../../types";
 import {
   listPlanetsInSystem,
-  listStarSystems,
+  listSeedSystems,
 } from "../server/db/systemCatalog";
 
 export default async function StarSystemsPage() {
-  const systems = (await listStarSystems()) as SystemRecord[];
+  const systems = (await listSeedSystems()) as SystemRecord[];
   const systemsWithPlanets = await Promise.all(
     systems.map(async (system) => ({
       system,
@@ -32,7 +32,7 @@ export default async function StarSystemsPage() {
           <h1>Star Systems</h1>
         </div>
         <p>
-          A compact survey board for seeded host stars and their known planets.
+          A compact survey board for famous and interesting stars and their known planets.
           Open a planet to inspect its measured parameters and generated visual
           model.
         </p>

@@ -14,10 +14,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Dynamo"
     }
-    "Uploads": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "Web": {
       "type": "sst.aws.Nextjs"
       "url": string

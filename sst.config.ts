@@ -1,7 +1,14 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+const stages = ["dev", "production"];
+
 export default $config({
   app(input) {
+
+    if (!stages.includes(input?.stage)) {
+      throw new Error(`Invalid SST stage ${input?.stage}`);
+    }
+
     return {
       name: "exoplanet-explorer",
       removal: input?.stage === "production" ? "retain" : "remove",
@@ -43,9 +50,10 @@ export default $config({
     });
 
     // For cached planet images, etc
-    const uploads = new sst.aws.Bucket("Uploads", {
-      access: "cloudfront"
-    });
+    // TODO: Add back in when using S3
+    // const uploads = new sst.aws.Bucket("Uploads", {
+    //   access: "cloudfront"
+    // });
 
     const web = new sst.aws.Nextjs("Web", {
       path: "packages/web",
@@ -64,7 +72,7 @@ export default $config({
     return {
       webUrl: web.url,
       systemCatalogTable: systemCatalog.name,
-      uploadsBucket: uploads.name,
+      // uploadsBucket: uploads.name,
       ingestSeedExoplanetsFunction: ingestSeedExoplanets.name
     };
   },

@@ -1,5 +1,4 @@
 import seedrandom from "seedrandom";
-import MurmurHash3 from "imurmurhash";
 import type {
     Planet,
     PlanetMaterialRecipe,
@@ -7,7 +6,6 @@ import type {
     PlanetClass
 } from '../../../types';
 import { getSeededColorPaletteByPlanetComposition } from './colorPalettes';
-import { getPlanetTextures } from "./getPlanetTextures";
 
 /**
  * Tracking the version in case I change the algorithm later.
@@ -98,7 +96,7 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
     // Noise based on temp for gas and ice giants, density for rocky planets
     // const noiseScale = (0.9 * rng() * 0.2)
     //     * (isGaseous ? lerp(2, 5, tempNormalized) : lerp(3, 8, densityNormalized));
-    const noiseScale = (isGaseous ? lerp(2, 5, tempNormalized) : lerp(3, 8, densityNormalized));
+    const noiseScale = (isGaseous ? lerp(2, 5, tempNormalized) : lerp(0.5, 2, densityNormalized));
 
     // Offset to use for multiple material inputs, like displacement and color to make them feel related
     const noiseOffset: [number, number, number] = [

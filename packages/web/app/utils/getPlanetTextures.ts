@@ -1,13 +1,13 @@
 // import { FBM } from "ts-noise";
 import { createNoise3D } from "simplex-noise";
 import { CanvasTexture, Color, MathUtils, RepeatWrapping } from "three";
-import { PlanetMaterialPalette } from "../../../types";
+import { NoiseFunction, FBMOptions, PlanetMaterialPalette } from "../../../types";
 
 interface PlanetTextureOptions {
     numericSeed: () => number;
     noiseScale: number;
     size: number;
-    colorPalette: PlanetMaterialPalette
+    colorPalette: PlanetMaterialPalette;
 };
 
 export function getPlanetColor(noiseValue: number, colorPalette: PlanetMaterialPalette): Color {
@@ -24,16 +24,31 @@ export function getPlanetColor(noiseValue: number, colorPalette: PlanetMaterialP
     return mid.clone().lerp(high, (noiseValue - 0.55) / 0.45);
 }
 
-export function getPlanetTextures({ numericSeed, noiseScale,  size = 512, colorPalette }: PlanetTextureOptions) {
-    // const fbm = new FBM({
-    //     seed: numericSeed,
-    //     scale: noiseScale,
-    //     persistance: 0.25,
-    //     lacunarity: 0.25,
-    //     octaves: 2,
-    //     redistribution: 0.25
-    // });
+export function fbm3(noise: NoiseFunction, x: number, y: number, z: number, options: FBMOptions): number {
 
+    const { scale, octaves, persistence, lacunarity, redistribution } = options;
+
+    let value = 0;
+    let amplitude = 1;
+    let frequency = scale;
+    let maxAmplitude = 0;
+
+    for (let octave = 0; octave < octaves; octave++) {
+        value += noise(x * frequency, y * frequency, z * frequency) * amplitude;
+        maxAmplitude += amplitude;
+
+        amplitude *= persistence;
+        frequency *= lacunarity;
+    }
+
+    const normalized = value / maxAmplitude; // roughly -1..1
+    const positive = normalized * 0.5 + 0.5 // roughly 0..1
+
+    return Math.pow(MathUtils.clamp(positive, 0, 1), redistribution);
+
+}
+
+export function getPlanetTextures({ numericSeed, noiseScale,  size = 512, colorPalette }: PlanetTextureOptions) {
     const noise = createNoise3D(numericSeed);
 
     const heightMapCanvas = document.createElement("canvas");
@@ -75,15 +90,15 @@ export function getPlanetTextures({ numericSeed, noiseScale,  size = 512, colorP
             // medium for terrain
             // high for detail
             // Weights determine how much influece each layer has
-            const n =
-                0.55 * noise(nx * 2.0, ny * 2.0, nz * 2.0) +
-                0.30 * noise(nx * 5.0, ny * 5.0, nz * 5.0) +
-                0.15 * noise(nx * 14.0, ny * 14.0, nz * 14.0);
+            const n = fbm3(noise, nx, ny, nz, {
+                scale: noiseScale,
+                octaves: 4,
+                persistence: 0.5,
+                lacunarity: 4,
+                redistribution: 1.5
+            });
 
-            // Convert from simplex-noise's -1 - 1 to 0 - 1
-            const normalized = n * 0.5 + 0.5;
-
-            const clamped = MathUtils.clamp(normalized, 0, 1);
+            const clamped = MathUtils.clamp(n, 0, 1);
 
             // Calculate pixel index (based on current position in loop)
             const i = (y * size + x) * 4;

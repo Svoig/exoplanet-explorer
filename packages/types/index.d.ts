@@ -181,5 +181,15 @@ export interface PlanetMaterialRecipe {
     }
 }
 
+export type NoiseFunction = (x: number, y: number, z: number) => number;
+
+export interface FBMOptions {
+    scale: number;
+    octaves: number;
+    persistence: number;
+    lacunarity: number;
+    redistribution: number;
+}
+
 export type PlanetRecord = Planet & Record;
 export type SystemRecord = System & Record;
