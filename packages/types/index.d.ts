@@ -146,6 +146,9 @@ export interface PlanetMaterialPaletteRanges {
     mid: PlanetMaterialPaletteRange;
     high: PlanetMaterialPaletteRange;
     atmosphere: PlanetMaterialPaletteRange;
+    cloudDeep: PlanetMaterialPaletteRange;
+    cloudMid: PlanetMaterialPaletteRange;
+    cloudHigh: PlanetMaterialPaletteRange;
     fresnel: PlanetMaterialPaletteRange;
 }
 
@@ -154,6 +157,9 @@ export interface PlanetMaterialPalette {
     mid: string;
     high: string;
     atmosphere: string;
+    cloudDeep: string;
+    cloudMid: string;
+    cloudHigh: string;
     fresnel: string;
 }
 

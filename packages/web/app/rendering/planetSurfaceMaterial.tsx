@@ -1,34 +1,20 @@
-import { useMemo } from "react";
-import MurmurHash3 from "imurmurhash";
 import type { PlanetMaterialRecipe } from "../../../types";
-import { getPlanetTextures } from "../utils/getPlanetTextures";
+import { CanvasTexture } from "three";
 
 export function PlanetSurfaceMaterial({
-  seed,
   recipe,
+  surfaceHeightTexture,
+  surfaceColorTexture
 }: {
-  seed: string;
   recipe: PlanetMaterialRecipe;
+  surfaceHeightTexture: CanvasTexture | undefined;
+  surfaceColorTexture: CanvasTexture | undefined;
 }) {
-  const numericSeed = MurmurHash3(seed).result;
-
-  const { heightTexture, colorTexture } = useMemo(() =>
-    getPlanetTextures(
-      {
-        numericSeed,
-        noiseScale: recipe.surface.noiseScale,
-        size: 512,
-        colorPalette: recipe.palette,
-      }, 
-    ),
-    [numericSeed, recipe],
-  );
-
   return (
       <meshStandardMaterial
         // Main color texture
-        map={colorTexture}
-        displacementMap={heightTexture}
+        map={surfaceColorTexture}
+        displacementMap={surfaceHeightTexture}
         displacementScale={recipe.surface.displacementStrength}
         roughness={recipe.surface.roughness}
         metalness={recipe.surface.metalness}
