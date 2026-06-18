@@ -41,10 +41,11 @@ export function Renderer({ data }:
       <div style={{ width: "100%", height: "500px" }}>
         <Canvas shadows="soft">
           <EffectComposer>
-            <Bloom intensity={1.0} luminanceThreshold={0.5} luminanceSmoothing={0.25} />
+            <Bloom intensity={1.0} luminanceThreshold={1.1} luminanceSmoothing={0.25} />
           </EffectComposer>
           <CameraControls />
           <directionalLight position={[10, 3, 8]} intensity={6} castShadow />
+          <hemisphereLight args={["#9fb8ff", "#02030a", 0.08]} />
           <PlanetMesh
             planet={data}
             recipe={recipe}

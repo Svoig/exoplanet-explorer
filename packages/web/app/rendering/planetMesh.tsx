@@ -53,6 +53,7 @@ export function PlanetMesh({
             surfaceColorTexture={surfaceColorTexture}
             surfaceNormalTexture={surfaceNormalTexture}
             surfaceRoughnessTexture={surfaceRoughnessTexture}
+            cloudHeightTexture={cloudHeightTexture}
           />
         </mesh>
 
@@ -61,7 +62,7 @@ export function PlanetMesh({
             <planetCloudMaterial
                 cloudHeightTexture={cloudHeightTexture}
                 cloudColorTexture={cloudColorTexture}
-                uOpacity={0.65}
+                uOpacity={0.5}
                 uAlphaLow={0.12}
                 uAlphaHigh={0.62}
                 uCloudTint={recipe.palette.cloudDeep}

@@ -45,12 +45,12 @@ function classifyComposition(radiusEarth: number, tempK: number) {
 
 function getDisplacementStrengthByPlanetComposition(composition: PlanetClass): number {
     const displacementByClass = {
-        rocky: 0.08,
-        icy: 0.18,
-        volatile: 0.10,
-        lava: 0.40,
-        "ice-giant": 0.04,
-        "gas-giant": 0.015
+        rocky: 0.015,
+        icy: 0.025,
+        volatile: 0.012,
+        lava: 0.035,
+        "ice-giant": 0.003,
+        "gas-giant": 0.0
     };
 
     return displacementByClass[composition] ?? 0;
