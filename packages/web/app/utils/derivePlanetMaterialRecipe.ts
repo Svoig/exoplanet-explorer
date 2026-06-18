@@ -130,7 +130,7 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
             fresnelPower: isGaseous ? 2.7 : 4.8,
             opacity: atmosphereOpacity,
             // AI said 1.1 for gaseous, but 1.02 looks better to me (see toi-1408-b)
-            thickness: isGaseous ? 0.025 : 0.035
+            thickness: isGaseous ? 0.0125 : 0.0135
         }
     };
 

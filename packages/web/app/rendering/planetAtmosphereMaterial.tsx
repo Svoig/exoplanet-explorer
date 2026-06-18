@@ -64,6 +64,10 @@ export const PlanetAtmosphereMaterial = shaderMaterial(
             }
 
             gl_FragColor = vec4(uColor * fresnel * uIntensity * atmosphereLight, alpha);
+            
+            // Premultiplied alpha version for subtler glow
+            // vec3 color = uColor * fresnel * uIntensity * atmosphereLight;
+            // gl_FragColor = vec4(color * alpha, alpha);
         }
     `
 );
