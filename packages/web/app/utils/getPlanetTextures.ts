@@ -28,6 +28,8 @@ interface NoiseTextureOptions {
     size: number;
     greyscaleCanvas: HTMLCanvasElement;
     colorCanvas: HTMLCanvasElement;
+    normalCanvas: HTMLCanvasElement;
+    roughnessCanvas: HTMLCanvasElement;
     colorPalette: PlanetMaterialPalette;
     isSurface?: boolean;
     noiseFunction: NoiseFunction3D;
@@ -41,6 +43,73 @@ interface NoiseTextureOptions {
 interface NoiseTextures {
     greyscaleTexture: CanvasTexture;
     colorTexture: CanvasTexture;
+    normalTexture: CanvasTexture;
+    roughnessTexture: CanvasTexture;
+}
+
+function getNormalImageFromHeight(heightImage: ImageData, size: number, strength = 14): ImageData {
+    const normalImage = new ImageData(size, size);
+
+    function heightAt(x: number, y: number): number {
+      const wrappedX = (x + size) % size;
+      const clampedY = MathUtils.clamp(y, 0, size - 1);
+      return heightImage.data[(clampedY * size + wrappedX) * 4] / 255;
+    }
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const left = heightAt(x - 1, y);
+        const right = heightAt(x + 1, y);
+        const up = heightAt(x, y + 1);
+        const down = heightAt(x, y - 1);
+
+        const dx = (right - left) * strength;
+        const dy = (up - down) * strength;
+
+        const length = Math.sqrt(dx * dx + dy * dy + 1);
+        const nx = -dx / length;
+        const ny = -dy / length;
+        const nz = 1 / length;
+
+        const i = (y * size + x) * 4;
+        normalImage.data[i] = (nx * 0.5 + 0.5) * 255;
+        normalImage.data[i + 1] = (ny * 0.5 + 0.5) * 255;
+        normalImage.data[i + 2] = (nz * 0.5 + 0.5) * 255;
+        normalImage.data[i + 3] = 255;
+      }
+    }
+
+    return normalImage;
+}
+
+function getRoughnessImageFromHeight(heightImage: ImageData, size: number): ImageData {
+  const roughnessImage = new ImageData(size, size);
+
+  function heightAt(x: number, y: number): number {
+    const wrappedX = (x + size) % size;
+    const clampedY = MathUtils.clamp(y, 0, size - 1);
+    return heightImage.data[(clampedY * size + wrappedX) * 4] / 255;
+  }
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const height = heightAt(x, y);
+      const slope =
+        Math.abs(heightAt(x + 1, y) - heightAt(x - 1, y)) +
+        Math.abs(heightAt(x, y + 1) - heightAt(x, y - 1));
+
+      const roughness = MathUtils.clamp(0.38 + height * 0.24 + slope * 5.5, 0.32, 0.86);
+      const value = Math.floor(roughness * 255);
+      const i = (y * size + x) * 4;
+
+      roughnessImage.data[i] = value;
+      roughnessImage.data[i + 1] = value;
+      roughnessImage.data[i + 2] = value;
+      roughnessImage.data[i + 3] = 255;
+    }
+  }
+
+  return roughnessImage;
 }
 
 export function getPlanetColor(noiseValue: number, colorPalette: PlanetMaterialPalette, isSurface = true): Color {
@@ -175,6 +244,8 @@ export function applyNoise({
 function createNoiseTexture({
   greyscaleCanvas,
   colorCanvas,
+  normalCanvas,
+  roughnessCanvas,
   size,
   noiseFunction,
   noiseScale,
@@ -189,15 +260,21 @@ function createNoiseTexture({
   greyscaleCanvas.height = size;
   colorCanvas.width = size;
   colorCanvas.height = size;
+  normalCanvas.width = size;
+  normalCanvas.height = size;
+  roughnessCanvas.width = size;
+  roughnessCanvas.height = size;
 
   // ! because 2d is always supported and we haven't used a different context
   const surfaceHeightMapCTX = greyscaleCanvas.getContext("2d")!;
   const surfaceColorMapCTX = colorCanvas.getContext("2d")!;
+  const surfaceNormalMapCTX = normalCanvas.getContext("2d")!;
+  const surfaceRoughnessMapCTX = roughnessCanvas.getContext("2d")!;
 
   const surfaceHeightImage = surfaceHeightMapCTX.createImageData(size, size);
   const surfaceColorImage = surfaceColorMapCTX.createImageData(size, size);
 
-  // Mutate passed image data
+  // Mutate passed image data to get height and color maps
   applyNoise({
     size,
     greyscaleImage: surfaceHeightImage,
@@ -212,12 +289,20 @@ function createNoiseTexture({
     noiseRedistribution
   });
 
+  const normalImage = getNormalImageFromHeight(surfaceHeightImage, size);
+  const roughnessImage = getRoughnessImageFromHeight(surfaceHeightImage, size);
+
   surfaceHeightMapCTX.putImageData(surfaceHeightImage, 0, 0);
   surfaceColorMapCTX.putImageData(surfaceColorImage, 0, 0);
+
+  surfaceNormalMapCTX.putImageData(normalImage, 0, 0);
+  surfaceRoughnessMapCTX.putImageData(roughnessImage, 0, 0);
 
   // Convert canvases into Three.js textures
   const greyscaleTexture = new CanvasTexture(greyscaleCanvas);
   const colorTexture = new CanvasTexture(colorCanvas);
+  const normalTexture = new CanvasTexture(normalCanvas);
+  const roughnessTexture = new CanvasTexture(roughnessCanvas);
 
   // Allow textures to wrap horizontally
   greyscaleTexture.wrapT = RepeatWrapping;
@@ -226,9 +311,17 @@ function createNoiseTexture({
   colorTexture.wrapT = RepeatWrapping;
   colorTexture.wrapS = RepeatWrapping;
 
+  normalTexture.wrapT = RepeatWrapping;
+  normalTexture.wrapS = RepeatWrapping;
+
+  roughnessTexture.wrapT = RepeatWrapping;
+  roughnessTexture.wrapS = RepeatWrapping;
+
   return {
     greyscaleTexture,
     colorTexture,
+    normalTexture,
+    roughnessTexture
   };
 }
 
@@ -240,13 +333,19 @@ export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette 
      */
     const surfaceHeightMapCanvas = document.createElement("canvas");
     const surfaceColorMapCanvas = document.createElement("canvas");
+    const surfaceNormalCanvas = document.createElement("canvas");
+    const surfaceRoughnessCanvas = document.createElement("canvas");
 
     const {
       greyscaleTexture: surfaceHeightTexture,
-      colorTexture: surfaceColorTexture
+      colorTexture: surfaceColorTexture,
+      normalTexture: surfaceNormalTexture,
+      roughnessTexture: surfaceRoughnessTexture
     } = createNoiseTexture({
       greyscaleCanvas: surfaceHeightMapCanvas,
       colorCanvas: surfaceColorMapCanvas,
+      normalCanvas: surfaceNormalCanvas,
+      roughnessCanvas: surfaceRoughnessCanvas,
       size,
       colorPalette,
       noiseFunction,
@@ -262,13 +361,19 @@ export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette 
      */
     const greyscaleCloudCanvas = document.createElement("canvas");
     const colorCloudCanvas = document.createElement("canvas");
+    const normalCloudCanvas = document.createElement("canvas");
+    const roughnessCloudCanvas = document.createElement("canvas");
 
     const {
         greyscaleTexture: cloudHeightTexture,
-        colorTexture: cloudColorTexture
+        colorTexture: cloudColorTexture,
+        normalTexture: cloudNormalTexture,
+        roughnessTexture: cloudRoughnessTexture,
     } = createNoiseTexture({
         greyscaleCanvas: greyscaleCloudCanvas,
         colorCanvas: colorCloudCanvas,
+        normalCanvas: normalCloudCanvas,
+        roughnessCanvas: roughnessCloudCanvas,
         size,
         colorPalette,
         isSurface: false,
@@ -280,6 +385,14 @@ export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette 
         noiseRedistribution: 2.5
     })
 
-    return { surfaceHeightTexture, surfaceColorTexture, cloudHeightTexture, cloudColorTexture };
+    return {
+      surfaceHeightTexture,
+      surfaceColorTexture,
+      surfaceNormalTexture,
+      surfaceRoughnessTexture,
+      cloudHeightTexture,
+      cloudColorTexture,
+      cloudNormalTexture,
+      cloudRoughnessTexture,
+    };
 }
-

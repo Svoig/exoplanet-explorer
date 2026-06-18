@@ -27,24 +27,34 @@ export function Renderer({ data }:
     [recipe],
   );
 
-  const { surfaceHeightTexture, surfaceColorTexture, cloudHeightTexture, cloudColorTexture } = textures ?? {};
+  const {
+    surfaceHeightTexture,
+    surfaceColorTexture,
+    surfaceNormalTexture,
+    surfaceRoughnessTexture,
+    cloudHeightTexture,
+    cloudColorTexture,
+  } = textures ?? {};
 
 
     return (
       <div style={{ width: "100%", height: "500px" }}>
-        <Canvas>
+        <Canvas shadows="soft">
           <EffectComposer>
-            <Bloom />
+            <Bloom intensity={1.0} luminanceThreshold={0.5} luminanceSmoothing={0.25} />
           </EffectComposer>
           <CameraControls />
-          <directionalLight position={[10, 3, 8]} intensity={12} />
+          <directionalLight position={[10, 3, 8]} intensity={6} castShadow />
           <PlanetMesh
             planet={data}
             recipe={recipe}
             surfaceHeightTexture={surfaceHeightTexture}
             surfaceColorTexture={surfaceColorTexture}
+            surfaceNormalTexture={surfaceNormalTexture}
+            surfaceRoughnessTexture={surfaceRoughnessTexture}
             cloudHeightTexture={cloudHeightTexture}
             cloudColorTexture={cloudColorTexture}
+            sunDirection={[10, 3, 8]}
           />
         </Canvas>
       </div>

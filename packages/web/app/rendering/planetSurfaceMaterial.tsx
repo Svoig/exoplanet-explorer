@@ -1,22 +1,31 @@
 import type { PlanetMaterialRecipe } from "../../../types";
-import { CanvasTexture } from "three";
+import { CanvasTexture, Vector2 } from "three";
 
 export function PlanetSurfaceMaterial({
   recipe,
+  displacementScale,
   surfaceHeightTexture,
-  surfaceColorTexture
+  surfaceColorTexture,
+  surfaceNormalTexture,
+  surfaceRoughnessTexture,
 }: {
   recipe: PlanetMaterialRecipe;
+  displacementScale: number;
   surfaceHeightTexture: CanvasTexture | undefined;
   surfaceColorTexture: CanvasTexture | undefined;
+  surfaceNormalTexture: CanvasTexture | undefined;
+  surfaceRoughnessTexture: CanvasTexture | undefined;
 }) {
   return (
       <meshStandardMaterial
         // Main color texture
         map={surfaceColorTexture}
         displacementMap={surfaceHeightTexture}
-        displacementScale={recipe.surface.displacementStrength}
+        displacementScale={displacementScale}
+        normalMap={surfaceNormalTexture}
+        normalScale={new Vector2(recipe.surface.displacementStrength, recipe.surface.displacementStrength)}
         roughness={recipe.surface.roughness}
+        roughnessMap={surfaceRoughnessTexture}
         metalness={recipe.surface.metalness}
       />
   );

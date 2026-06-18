@@ -183,7 +183,7 @@ export interface PlanetMaterialRecipe {
     atmosphere: {
         fresnelPower: number;
         opacity: number;
-        scale: number;
+        thickness: number; // Normalized fraction of display radius
     }
 }
 

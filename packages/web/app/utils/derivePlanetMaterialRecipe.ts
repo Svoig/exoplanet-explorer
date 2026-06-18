@@ -92,7 +92,8 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
     // TODO: Confirm all values using this are correct for ice giants, not just gas giants
     const isGaseous = ["gas-giant", "ice-giant"].indexOf(composition) > -1;
 
-    const roughness = clamp(lerp(0.25, 0.95, densityNormalized),  0, 1);
+    const roughness = isGaseous ? clamp(lerp(0.95, 1.0, densityNormalized),  0, 1) : clamp(lerp(0.65, 0.95, densityNormalized), 0, 1);
+
     // Noise based on temp for gas and ice giants, density for rocky planets
     // const noiseScale = (0.9 * rng() * 0.2)
     //     * (isGaseous ? lerp(2, 5, tempNormalized) : lerp(3, 8, densityNormalized));
@@ -129,7 +130,7 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
             fresnelPower: isGaseous ? 2.7 : 4.8,
             opacity: atmosphereOpacity,
             // AI said 1.1 for gaseous, but 1.02 looks better to me (see toi-1408-b)
-            scale: isGaseous ? 1.02 : 1.09
+            thickness: isGaseous ? 0.025 : 0.035
         }
     };
 

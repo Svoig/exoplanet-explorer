@@ -15,7 +15,8 @@ export const PlanetAtmosphereMaterial = shaderMaterial(
         uColor: new Color("#a8c2ff"),
         uIntensity: 1.8,
         uPower: 3.0,
-        uOpacity: 0.45
+        uOpacity: 0.45,
+        uSunDirection: [10, 3, 8]
     },
     // vertex shader
     `
@@ -37,22 +38,32 @@ export const PlanetAtmosphereMaterial = shaderMaterial(
         uniform float uIntensity;
         uniform float uPower;
         uniform float uOpacity;
+        uniform vec3 uSunDirection;
 
         varying vec3 vNormal;
         varying vec3 vViewDir;
 
         void main() {
-            float viewDot = dot(normalize(vNormal), normalize(vViewDir));
+            vec3 normal = normalize(vNormal);
+            vec3 viewDir = normalize(vViewDir);
+            vec3 sunDir = normalize(uSunDirection);
 
+            float viewDot = dot(normalize(vNormal), normalize(vViewDir));
             float fresnel = pow(1.0 - abs(viewDot), uPower);
 
-            float alpha = fresnel * uOpacity;
+            float sunFacing = dot(normal, sunDir);
+            float dayAmount = smoothstep(-0.15, 0.7, sunFacing);
+            float terminatorAmount = smoothstep(-0.45, 0.15, sunFacing);
 
-            if (alpha < 0.01) {
+            float atmosphereLight = max(dayAmount, terminatorAmount * 0.35);
+
+            float alpha = fresnel * uOpacity * atmosphereLight;
+
+            if (alpha < 0.0001) {
                 discard;
             }
 
-            gl_FragColor = vec4(uColor * fresnel * uIntensity, alpha);
+            gl_FragColor = vec4(uColor * fresnel * uIntensity * atmosphereLight, alpha);
         }
     `
 );
