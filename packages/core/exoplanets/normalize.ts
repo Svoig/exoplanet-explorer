@@ -80,12 +80,22 @@ export function normalizePlanet(row: NasaPlanetRow): PlanetRecord {
         orbit: {
             periodDays: row.pl_orbper,
             semiMajorAxisAu: row.pl_orbsmax,
+            eccentricity: row.pl_orbeccen,
+            inclinationDeg: row.pl_orbincl
         },
 
         planet: {
             radiusEarth: row.pl_rade,
             massEarth: row.pl_bmasse,
-            equilibriumTempK: row.pl_eqt
+            densityGCM3: row.pl_dens,
+            equilibriumTempK: row.pl_eqt,
+            insolationEarth: row.pl_insol
+        },
+
+        transit: {
+            depthPercent: row.pl_trandep,
+            durationHours: row.pl_trandur,
+            planetStarRadiusRatio: row.pl_ratror
         },
 
         star: normalizeStar(row),

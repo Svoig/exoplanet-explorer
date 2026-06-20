@@ -1,13 +1,16 @@
 import { createNoise3D, NoiseFunction3D } from "simplex-noise";
 import { CanvasTexture, Color, MathUtils, RepeatWrapping } from "three";
-import { NoiseFunction, FBMOptions, PlanetMaterialPalette } from "../../../types";
+import { NoiseFunction, FBMOptions, PlanetMaterialPalette, PlanetMaterialRecipe } from "../../../types";
 import seedrandom from "seedrandom";
+import { lerp } from "three/src/math/MathUtils.js";
 
 interface PlanetTextureOptions {
     seed: string;
     noiseScale: number;
     size: number;
     colorPalette: PlanetMaterialPalette;
+    surfaceNoise: PlanetMaterialRecipe["surface"];
+    cloudNoise: PlanetMaterialRecipe["clouds"];
 };
 
 interface NoiseImageOptions {
@@ -18,11 +21,7 @@ interface NoiseImageOptions {
     isSurface?: boolean;
     noiseFunction: NoiseFunction3D;
     warpNoiseFunction: NoiseFunction3D;
-    noiseScale: number;
-    noiseOctaves: number,
-    noisePersistence: number,
-    noiseLacunarity: number,
-    noiseRedistribution: number,
+    surfaceNoise: PlanetMaterialRecipe["surface"];
 };
 
 interface NoiseTextureOptions {
@@ -35,11 +34,7 @@ interface NoiseTextureOptions {
     isSurface?: boolean;
     noiseFunction: NoiseFunction3D;
     warpNoiseFunction: NoiseFunction3D;
-    noiseScale: number;
-    noiseOctaves: number,
-    noisePersistence: number,
-    noiseLacunarity: number,
-    noiseRedistribution: number,
+    surfaceNoise: PlanetMaterialRecipe["surface"];
 }
 
 interface NoiseTextures {
@@ -53,6 +48,7 @@ interface CloudNoiseOptions {
   size: number;
   greyscaleImage: ImageData;
   colorImage: ImageData;
+  cloudNoise: PlanetMaterialRecipe["clouds"];
   noiseFunction: NoiseFunction3D;
   warpNoiseFunction: NoiseFunction3D;
 }
@@ -65,6 +61,7 @@ interface CloudNoiseTextureOptions {
   roughnessCanvas: HTMLCanvasElement;
   noiseFunction: NoiseFunction3D;
   warpNoiseFunction: NoiseFunction3D;
+  cloudNoise: PlanetMaterialRecipe["clouds"];
 }
 
 function normalize3(x: number, y: number, z: number): [number, number, number] {
@@ -193,11 +190,7 @@ export function applyNoise({
   size,
   noiseFunction,
   warpNoiseFunction,
-  noiseScale,
-  noiseOctaves,
-  noisePersistence,
-  noiseLacunarity,
-  noiseRedistribution,
+  surfaceNoise,
   greyscaleImage,
   colorImage,
   colorPalette,
@@ -248,15 +241,15 @@ export function applyNoise({
       // high for detail
       // Weights determine how much influece each layer has
       const continent = fbm3(noiseFunction, nx, ny, nz, {
-        scale: 0.75,
+        scale: surfaceNoise.continentScale,
         octaves: 4,
         persistence: 0.55,
         lacunarity: 2.0,
-        redistribution: 1.2
+        redistribution: surfaceNoise.redistribution
       });
 
       const mountain = fbm3(noiseFunction, tx + 13.7, ty - 4.2, tz + 8.9, {
-        scale: 2.4,
+        scale: surfaceNoise.mountainScale,
         octaves: 5,
         persistence: 0.52,
         lacunarity: 2.25,
@@ -267,15 +260,18 @@ export function applyNoise({
       const ridges = Math.pow(1.0 - Math.abs(mountain * 2.8 - 1.0), 2.2);
 
       const detail = fbm3(noiseFunction, tx - 21.3, ty + 5.1, tz + 2.4, {
-        scale: 8.0, octaves: 3,
+        scale: surfaceNoise.detailScale,
+        octaves: 3,
         persistence: 0.45,
         lacunarity: 2.5,
         redistribution: 1.0
       });
 
-      const terrain = continent * 0.72 +
-        ridges * 0.22 +
-        detail * 0.06;
+
+      const terrain =
+        continent * (1 - surfaceNoise.ridgeStrength - surfaceNoise.detailStrength) +
+        ridges * surfaceNoise.ridgeStrength +
+        detail * surfaceNoise.detailStrength;
 
       const height = MathUtils.clamp(terrain, 0, 1);
 
@@ -328,11 +324,7 @@ function createSurfaceNoiseTexture({
   size,
   noiseFunction,
   warpNoiseFunction,
-  noiseScale,
-  noiseOctaves,
-  noiseLacunarity,
-  noisePersistence,
-  noiseRedistribution,
+  surfaceNoise,
   colorPalette,
   isSurface = true,
 }: NoiseTextureOptions): NoiseTextures {
@@ -363,11 +355,7 @@ function createSurfaceNoiseTexture({
     isSurface,
     noiseFunction,
     warpNoiseFunction,
-    noiseScale,
-    noiseOctaves,
-    noiseLacunarity,
-    noisePersistence,
-    noiseRedistribution
+    surfaceNoise
   });
 
   const normalImage = getNormalImageFromHeight(surfaceHeightImage, size);
@@ -410,6 +398,7 @@ function createCloudNoise({
   size,
   greyscaleImage,
   colorImage,
+  cloudNoise,
   noiseFunction,
   warpNoiseFunction,
 }: CloudNoiseOptions): void {
@@ -488,8 +477,12 @@ function createCloudNoise({
         redistribution: 1.0,
       });
 
-      const cloudValue = base * 0.9 + detail * 0.22 - erode * 0.32;
-      const cloudMask = MathUtils.smoothstep(cloudValue, 0.46, 0.68);
+      // These variables determine how much cloud cover exists
+      const generationLow = lerp(0.62, 0.36, cloudNoise.coverage);
+      const generationHigh = lerp(0.82, 0.58, cloudNoise.coverage);
+
+      const cloudValue = base * 0.9 + detail * 0.22 - erode * cloudNoise.erosionStrength;
+      const cloudMask = MathUtils.smoothstep(cloudValue, generationLow, generationHigh);
       const clamped = MathUtils.clamp(cloudMask, 0, 1);
 
       // Calculate pixel index (based on current position in loop)
@@ -526,6 +519,7 @@ function createCloudNoiseTexture({
   size,
   noiseFunction,
   warpNoiseFunction,
+  cloudNoise
 }: CloudNoiseTextureOptions): NoiseTextures {
   greyscaleCanvas.width = size;
   greyscaleCanvas.height = size;
@@ -550,6 +544,7 @@ function createCloudNoiseTexture({
     colorImage,
     noiseFunction,
     warpNoiseFunction,
+    cloudNoise
   });
 
   const normalImage = getNormalImageFromHeight(greyscaleImage, size, 2);
@@ -585,7 +580,7 @@ function createCloudNoiseTexture({
   };
 }
 
-export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette }: PlanetTextureOptions) {
+export function getPlanetTextures({ seed, surfaceNoise, cloudNoise, size = 512, colorPalette }: PlanetTextureOptions) {
     const noiseFunction = createNoise3D(seedrandom(seed));
     const warpNoiseFunction = createNoise3D(seedrandom(seed + "-warp"));
     // Separate seed for clouds to separate from surface noise values
@@ -614,11 +609,7 @@ export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette 
       colorPalette,
       noiseFunction,
       warpNoiseFunction,
-      noiseScale,
-      noiseOctaves: 4,
-      noisePersistence: 0.5,
-      noiseLacunarity: 4,
-      noiseRedistribution: 1.5
+      surfaceNoise,
     });
 
     /**
@@ -642,6 +633,7 @@ export function getPlanetTextures({ seed, noiseScale,  size = 512, colorPalette 
         size,
         noiseFunction: cloudNoiseFunction,
         warpNoiseFunction: cloudWarpNoiseFunction,
+        cloudNoise
     })
 
     return {

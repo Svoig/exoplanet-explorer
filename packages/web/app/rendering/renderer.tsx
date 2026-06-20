@@ -19,9 +19,11 @@ export function Renderer({ data }:
     recipe ? getPlanetTextures(
       {
         seed: recipe.seed,
-        noiseScale: recipe?.surface.noiseScale ?? 0,
+        noiseScale: recipe.surface.noiseScale ?? 0,
         size: 512,
-        colorPalette: recipe?.palette,
+        colorPalette: recipe.palette,
+        surfaceNoise: recipe.surface,
+        cloudNoise: recipe.clouds
       }, 
     ) : null,
     [recipe],

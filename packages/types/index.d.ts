@@ -89,12 +89,22 @@ export interface Planet {
     orbit: {
         periodDays: number | null;
         semiMajorAxisAu: number | null;
+        eccentricity: number | null;
+        inclinationDeg: number | null;
     }
 
     planet: {
         radiusEarth: number | null;
         massEarth: number | null;
+        densityGCM3: number | null;
         equilibriumTempK: number | null;
+        insolationEarth: number | null;
+    }
+
+    transit: {
+        depthPercent: number | null;
+        durationHours: number | null;
+        planetStarRadiusRatio: number | null;
     }
 
     star: {
@@ -173,11 +183,27 @@ export interface PlanetMaterialRecipe {
     surface: {
         noiseScale: number;
         noiseOffset: [number, number, number];
-        noiseAlpha: number;
-        depthAlpha: number;
+        continentScale: number;
+        mountainScale: number;
+        detailScale: number;
+        ridgeStrength: number;
+        detailStrength: number;
+        warpAmount: number;
+        redistribution: number;
         displacementStrength: number;
         roughness: number;
         metalness: number;
+    }
+
+    clouds: {
+        coverage: number;
+        opacity: number;
+        alphaLow: number;
+        alphaHigh: number;
+        warpAmount: number;
+        baseScale: number;
+        detailScale: number;
+        erosionStrength: number;
     }
 
     atmosphere: {

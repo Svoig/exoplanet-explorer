@@ -62,9 +62,9 @@ export function PlanetMesh({
             <planetCloudMaterial
                 cloudHeightTexture={cloudHeightTexture}
                 cloudColorTexture={cloudColorTexture}
-                uOpacity={0.5}
-                uAlphaLow={0.12}
-                uAlphaHigh={0.62}
+                uOpacity={recipe.clouds.opacity}
+                uAlphaLow={recipe.clouds.alphaLow}
+                uAlphaHigh={recipe.clouds.alphaHigh}
                 uCloudTint={recipe.palette.cloudDeep}
                 transparent
                 depthWrite={false}

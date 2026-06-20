@@ -62,10 +62,17 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
         return null;
     }
 
-    const radius = planet.planet.radiusEarth;
-    // Density in g/cm^3. 5.51 is appx Earth's mass in g/cm^3.
-    const densityGCM3 = 5.51 * (planet.planet.massEarth / Math.pow(planet.planet.radiusEarth, 3));
-    const tempK = planet.planet.equilibriumTempK;
+
+    const radiusEarth = planet.planet.radiusEarth;
+
+    const densityGCM3 = 5.51 * (
+        planet.planet.massEarth / Math.pow(planet.planet.radiusEarth, 3)
+    );
+
+    const insolation = planet.planet.insolationEarth;
+    const tempFromInsolation = insolation === null ? null : 278 * Math.pow(insolation, 0.25);
+    
+    const tempK = planet.planet.equilibriumTempK ?? tempFromInsolation;
 
     const composition = classifyComposition(planet.planet.radiusEarth, planet.planet.equilibriumTempK);
 
@@ -89,6 +96,10 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
     const maxDensity = 13;
     const densityNormalized = clamp((densityGCM3 - minDensity) / (maxDensity - minDensity), 0, 1);
 
+    // Normalize orbital eccentricity (ovalness) and start proximity to 0 - 1 value
+    const eccentricityNormalized = clamp((planet.orbit.eccentricity ?? 0) / 0.6, 0, 1);
+    const starProximityNormalized = clamp(1 - ((planet.orbit.semiMajorAxisAu ?? 1) / 1.5), 0, 1);
+
     // TODO: Confirm all values using this are correct for ice giants, not just gas giants
     const isGaseous = ["gas-giant", "ice-giant"].indexOf(composition) > -1;
 
@@ -106,10 +117,72 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
         rng() * 100,
     ];
 
+    const atmosphereMassProxy = isGaseous
+        ? clamp(radiusEarth / 8, 0.35, 1)
+        : clamp(radiusEarth / Math.max(densityGCM3, 0.2) / Math.max(tempK / 300, 0.4), 0, 1);
+
+    const atmosphericActivity = clamp(
+        tempNormalized + eccentricityNormalized * 0.4 + starProximityNormalized * 0.25,
+        0,
+        1
+    );
+
+    const cloudCoverage = isGaseous
+        ? clamp(0.55 + atmosphereMassProxy * 0.25 + eccentricityNormalized * 0.1, 0.45, 0.9)
+        : clamp(0.32 + atmosphereMassProxy * 0.45 - tempNormalized * 0.25, 0.02, 0.65);
+
+    const cloudOpacity = isGaseous
+         ? lerp(0.42, 0.72, cloudCoverage)
+         : lerp(0.18, 0.52, cloudCoverage);
+        
+    const cloudAlphaHigh = lerp(0.76, 0.52, cloudCoverage);
+
+    const cloudWarpAmount = isGaseous
+        ? lerp(0.32, 0.62, atmosphericActivity)
+        : lerp(0.16, 0.36, atmosphericActivity);
+    
+    const cloudBaseScale = isGaseous
+        ? lerp(0.85, 1.55, atmosphericActivity)
+        : lerp(1.1, 2.0, atmosphericActivity);
+    
+    const cloudDetailScale = isGaseous
+        ? lerp(5.5, 10.0, atmosphericActivity)
+        : lerp(4.5, 8.0, atmosphericActivity);
+    
+    const cloudErosionStrength = lerp(0.42, 0.18, cloudCoverage);
+    
+    const surfaceWarpAmount = isGaseous
+        ? lerp(0.08, 0.28, starProximityNormalized + eccentricityNormalized * 0.5)
+        : lerp(0.08, 0.22, densityNormalized);
+    
+    const ridgeStrength = isGaseous ? 0.05 : lerp(0.12, 0.35, densityNormalized);
+    const detailStrength = isGaseous ? 0.08 : lerp(0.04, 0.12, densityNormalized);
+
+    const continentScale = isGaseous
+        ? lerp(0.9, 1.8, atmosphericActivity)
+        : lerp(0.45, 1.15, 1 - densityNormalized);
+
+    const mountainScale = isGaseous
+        ? lerp(1.8, 3.8, atmosphericActivity)
+        : lerp(1.8, 3.4, densityNormalized);
+
+    const detailScale = isGaseous
+        ? lerp(5.0, 9.0, atmosphericActivity)
+        : lerp(6.0, 11.0, densityNormalized);
+
     // Used to communicate atmosphere thickness
-    const atmosphereOpacity = isGaseous ? 0.45 : clamp(radius / densityGCM3 / (tempK / 300), 0.04, 0.22);
+    const atmosphereOpacity = isGaseous ? 0.45 : clamp(radiusEarth / densityGCM3 / (tempK / 300), 0.04, 0.22);
 
     const displacementStrength = getDisplacementStrengthByPlanetComposition(composition);
+
+    // Affects contrast - makes gaseous planets more uniform, temperate rocky worlds moderate, lava worlds very dramatic
+    const redistribution = isGaseous
+        ? lerp(0.9, 1.2, atmosphericActivity)
+        : clamp(
+            lerp(1.35, 0.95, densityNormalized) + lerp(-0.05, 0.25, tempNormalized),
+            0.85,
+            1.65
+        );
 
     return {
         derivationVersion: "v1",
@@ -120,11 +193,26 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
         surface: {
             noiseScale,
             noiseOffset,
-            noiseAlpha: isGaseous ? 0.18 : 0.28,
-            depthAlpha: 0.45,
+            warpAmount: surfaceWarpAmount,
+            continentScale,
+            mountainScale,
+            detailScale,
+            ridgeStrength,
+            detailStrength,
+            redistribution,
             displacementStrength,
             roughness: isGaseous ? 1.0 : roughness,
             metalness: isGaseous ? 0.0 : densityGCM3 > 7 ? 0.08 : 0,
+        },
+        clouds: {
+            coverage: cloudCoverage,
+            opacity: cloudOpacity,
+            alphaLow: 0.10,
+            alphaHigh: cloudAlphaHigh,
+            warpAmount: cloudWarpAmount,
+            baseScale: cloudBaseScale,
+            detailScale: cloudDetailScale,
+            erosionStrength: cloudErosionStrength
         },
         atmosphere: {
             fresnelPower: isGaseous ? 2.7 : 4.8,
