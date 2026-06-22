@@ -1,0 +1,35 @@
+.radioInput {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    margin: 0;
+    color: currentColor;
+    width: 1em;
+    height: 1em;
+    position: relative;
+    border: 0.125rem solid currentColor;
+    transform: translateY(25%);
+    margin-right: 0.25rem;
+}
+
+.radioLabel {
+    height: 24px;
+    width: 24px;
+    background-color: transparent;
+}
+
+/* Margin on non-initial radios */
+.radioLabel + .radioLabel {
+    margin-left: 1rem;
+}
+
+.radioInput:checked::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--mint);
+    height: 100%;
+    width: 100%;
+    transform-origin: center;
+}
