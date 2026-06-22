@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Planet } from "../../../../types";
-import { PlanetIcon } from "@/app/rendering/planetIcon/component";
-import { Renderer } from "@/app/rendering/renderer";
 import { getPlanet } from "@/app/server/db/systemCatalog";
 import { derivePlanetMaterialRecipe } from "@/app/utils/derivePlanetMaterialRecipe";
+import VisualStage from "@/app/rendering/visualStage";
 
 export default async function PlanetPage({
   params,
@@ -68,23 +67,7 @@ export default async function PlanetPage({
           </div>
         </div>
 
-        <div className="panel visual-stage">
-          {materialRecipe ? (
-            <>
-              <div className="planet-meta" style={{ justifyContent: "space-between" }}>
-                <span>Class: {materialRecipe.planetClass}</span>
-                <span>{materialRecipe.isGaseous ? "Gaseous" : "Terrestrial"}</span>
-              </div>
-              <Renderer type="planet" data={data} />
-              <PlanetIcon recipe={materialRecipe} />
-            </>
-          ) : (
-            <div className="empty-state">
-              This planet is missing the radius, mass, or temperature data
-              needed for a generated visual model.
-            </div>
-          )}
-        </div>
+        <VisualStage materialRecipe={materialRecipe} data={data} />
       </section>
     </main>
   );
