@@ -11,7 +11,7 @@ interface RadioProps {
 }
 
 export default function Radio({ id, name, label, value, checked, onChange }: RadioProps) {
-    const handleChange = () => onChange(value);
+    const handleChange = () => onChange(value as RenderDetailLevels);
     return (
         <label className={styles.radioLabel}>
             <input type="radio" className={styles.radioInput} id={id} name={name} value={value} checked={checked} onChange={handleChange} />
