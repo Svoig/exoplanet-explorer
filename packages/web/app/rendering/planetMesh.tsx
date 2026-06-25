@@ -65,7 +65,7 @@ export function PlanetMesh({
                 uOpacity={recipe.clouds.opacity}
                 uAlphaLow={recipe.clouds.alphaLow}
                 uAlphaHigh={recipe.clouds.alphaHigh}
-                uCloudTint={recipe.palette.cloudDeep}
+                uCloudTint={recipe.isGaseous ? recipe.palette.cloudHigh : recipe.palette.cloudDeep}
                 transparent
                 depthWrite={false}
                 depthTest

@@ -210,6 +210,7 @@ export interface PlanetMaterialRecipe {
         fresnelPower: number;
         opacity: number;
         thickness: number; // Normalized fraction of display radius
+        activity: number;
     }
 }
 

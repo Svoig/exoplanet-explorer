@@ -43,7 +43,9 @@ export function Renderer({ data, detailLevel }:
         size: textureSize,
         colorPalette: recipe.palette,
         surfaceNoise: recipe.surface,
-        cloudNoise: recipe.clouds
+        cloudNoise: recipe.clouds,
+        isGaseous: recipe.isGaseous,
+        atmosphericActivity: recipe.atmosphere.activity
       }, 
     ) : null,
     [recipe, textureSize],
