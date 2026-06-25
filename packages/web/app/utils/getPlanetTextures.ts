@@ -11,6 +11,8 @@ interface PlanetTextureOptions {
     colorPalette: PlanetMaterialPalette;
     surfaceNoise: PlanetMaterialRecipe["surface"];
     cloudNoise: PlanetMaterialRecipe["clouds"];
+    isGaseous: boolean;
+    atmosphericActivity: number;
 };
 
 interface NoiseImageOptions {
@@ -22,6 +24,8 @@ interface NoiseImageOptions {
     noiseFunction: NoiseFunction3D;
     warpNoiseFunction: NoiseFunction3D;
     surfaceNoise: PlanetMaterialRecipe["surface"];
+    isGaseous?: boolean;
+    atmosphericActivity?: number;
 };
 
 interface NoiseTextureOptions {
@@ -35,6 +39,8 @@ interface NoiseTextureOptions {
     noiseFunction: NoiseFunction3D;
     warpNoiseFunction: NoiseFunction3D;
     surfaceNoise: PlanetMaterialRecipe["surface"];
+    isGaseous?: boolean;
+    atmosphericActivity?: number;
 }
 
 interface NoiseTextures {
@@ -51,6 +57,8 @@ interface CloudNoiseOptions {
   cloudNoise: PlanetMaterialRecipe["clouds"];
   noiseFunction: NoiseFunction3D;
   warpNoiseFunction: NoiseFunction3D;
+  isGaseous: boolean;
+  atmosphericActivity: number;
 }
 
 interface CloudNoiseTextureOptions {
@@ -62,6 +70,8 @@ interface CloudNoiseTextureOptions {
   noiseFunction: NoiseFunction3D;
   warpNoiseFunction: NoiseFunction3D;
   cloudNoise: PlanetMaterialRecipe["clouds"];
+  isGaseous?: boolean;
+  atmosphericActivity?: number;
 }
 
 function normalize3(x: number, y: number, z: number): [number, number, number] {
@@ -195,6 +205,8 @@ export function applyNoise({
   colorImage,
   colorPalette,
   isSurface = true,
+  isGaseous = false,
+  atmosphericActivity = 0.25,
 }: NoiseImageOptions): void {
   for (let y = 0; y < size; y++) {
     // Normalize Y coordinate into UV space (new `v` ranges from 0 to 1)
@@ -214,6 +226,39 @@ export function applyNoise({
       const nx = Math.sin(theta) * Math.cos(phi);
       const ny = Math.cos(theta);
       const nz = Math.sin(theta) * Math.sin(phi);
+
+
+      /**
+       * GAS GIANT SURFACE NOISE
+       */
+
+      // For gas giants, create latitude-based bands that flow and swirl on east-west axis
+      const bandCount = Math.floor(lerp(9, 18, atmosphericActivity));
+      const jetShear = Math.sin(v * Math.PI * bandCount * 0.5);
+      const turbulence = fbm3(warpNoiseFunction, nx + 19.7, ny * 1.8 - 4.2, nz + 8.9, {
+        scale: 0.75,
+        octaves: 3,
+        persistence: 0.55,
+        lacunarity: 2.0,
+        redistribution: 1.0
+      }) * 2 - 1;
+      const shearNoise = jetShear * 0.55 + turbulence * 0.45;
+      const latitude = Math.abs(v - 0.5) * 2;
+      const bandWave = Math.sin((v + shearNoise * 0.035) * Math.PI * bandCount);
+      const fineWave = Math.sin((v + turbulence * 0.02) * Math.PI * bandCount * 3.2);
+
+      const bandValue = MathUtils.clamp(
+        0.5 + bandWave * 0.22 + fineWave * 0.07 + turbulence * 0.16,
+        0,
+        1
+      );
+
+      const gasGiantColor = getPlanetColor(bandValue, colorPalette, true);
+      const gasGiantHeight = MathUtils.clamp(0.5 + bandValue * 0.04, 0.45, 0.56);
+
+      /**
+       * TERRESTRIAL SURFACE NOISE
+       */
 
       const warpAmount = 0.18;
       const warpNoiseOptions = {
@@ -273,7 +318,9 @@ export function applyNoise({
         ridges * surfaceNoise.ridgeStrength +
         detail * surfaceNoise.detailStrength;
 
-      const height = MathUtils.clamp(terrain, 0, 1);
+      const terrestrialHeight = MathUtils.clamp(terrain, 0, 1);
+
+      const height = isGaseous ? gasGiantHeight : terrestrialHeight;
 
       // Calculate pixel index (based on current position in loop)
       const i = (y * size + x) * 4;
@@ -306,7 +353,9 @@ export function applyNoise({
 
       // Use same noise that drives height map
       const colorValue = MathUtils.clamp(height * 0.75 + mineralNoise * 0.25, 0, 1);
-      const color = getPlanetColor(colorValue, colorPalette, isSurface);
+      const terrestrialColor = getPlanetColor(colorValue, colorPalette, isSurface);
+
+      const color = isGaseous ? gasGiantColor : terrestrialColor;
 
       colorImage.data[i] = color.r * 255; // R
       colorImage.data[i + 1] = color.g * 255; // G
@@ -327,6 +376,8 @@ function createSurfaceNoiseTexture({
   surfaceNoise,
   colorPalette,
   isSurface = true,
+  isGaseous = false,
+  atmosphericActivity
 }: NoiseTextureOptions): NoiseTextures {
   greyscaleCanvas.width = size;
   greyscaleCanvas.height = size;
@@ -347,16 +398,18 @@ function createSurfaceNoiseTexture({
   const surfaceColorImage = surfaceColorMapCTX.createImageData(size, size);
 
   // Mutate passed image data to get height and color maps
-  applyNoise({
-    size,
-    greyscaleImage: surfaceHeightImage,
-    colorImage: surfaceColorImage,
-    colorPalette,
-    isSurface,
-    noiseFunction,
-    warpNoiseFunction,
-    surfaceNoise
-  });
+    applyNoise({
+      size,
+      greyscaleImage: surfaceHeightImage,
+      colorImage: surfaceColorImage,
+      colorPalette,
+      isSurface,
+      noiseFunction,
+      warpNoiseFunction,
+      surfaceNoise,
+      isGaseous,
+      atmosphericActivity
+    });
 
   const normalImage = getNormalImageFromHeight(surfaceHeightImage, size);
   const roughnessImage = getRoughnessImageFromHeight(surfaceHeightImage, size);
@@ -401,6 +454,8 @@ function createCloudNoise({
   cloudNoise,
   noiseFunction,
   warpNoiseFunction,
+  isGaseous = false,
+  atmosphericActivity = 0.25
 }: CloudNoiseOptions): void {
   for (let y = 0; y < size; y++) {
     // Normalize Y coordinate into UV space (new `v` ranges from 0 to 1)
@@ -421,6 +476,62 @@ function createCloudNoise({
       const ny = Math.cos(theta);
       const nz = Math.sin(theta) * Math.sin(phi);
 
+      /**
+       * GAS GIANTS
+       */
+
+      const gasGiantDetail = fbm3(noiseFunction, nx + 9.7, ny - 3.1, nz + 5.4, {
+        scale: cloudNoise.detailScale,
+        octaves: 4,
+        persistence: 0.5,
+        lacunarity: 2.5,
+        redistribution: 1.0
+      });
+
+      const bandCount = lerp(14, 24, atmosphericActivity);
+
+      const gasGiantTurbulence = fbm3(warpNoiseFunction, nx + 12.4, ny * 1.7 - 3.2, nz + 8.1, {
+        scale: 0.8,
+        octaves: 3,
+        persistence: 0.55,
+        lacunarity: 2.0,
+        redistribution: 1.0
+      }) * 2 - 1;
+
+      const jetShear = Math.sin(v * Math.PI * bandCount * 0.5);
+      const shear = jetShear * 0.04 + gasGiantTurbulence * 0.025;
+
+      const band = Math.sin((v + shear) * Math.PI * bandCount);
+      const narrowBand = Math.sin((v + shear * 1.4) * Math.PI * bandCount * 2.7);
+
+      // Emphasize brighter streaks
+      const band01 = band * 0.5 + 0.5;
+      const narrowBand01 = narrowBand * 0.5 + 0.5;
+      const highCloudStreaks = MathUtils.smoothstep(
+        0.58,
+        0.92,
+        narrowBand01 * 0.65 + gasGiantDetail * 0.35
+      );
+      const softBandHaze = MathUtils.clamp(
+        0.18 + band01 * 0.18 + gasGiantDetail * 0.08,
+        0,
+        0.38
+      );
+
+      const gasGiantCloudValue = MathUtils.clamp(
+        0.55 +
+          band * 0.22 +
+          narrowBand * 0.08 +
+          gasGiantTurbulence * 0.08 +
+          gasGiantDetail * 0.12,
+        0,
+        1
+      );
+
+
+      /**
+       * TERRESTRIAL
+       */
 
       // Generate warped noise for more realistic clouds
       const warpAmount = 0.45;
@@ -461,7 +572,7 @@ function createCloudNoise({
         redistribution: 1.15,
       });
 
-      const detail = fbm3(noiseFunction, warpedX + 9.7, warpedY - 3.1, warpedZ + 5.4, {
+      const terrestrialDetail = fbm3(noiseFunction, warpedX + 9.7, warpedY - 3.1, warpedZ + 5.4, {
         scale: 8.0,
         octaves: 4,
         persistence: 0.5,
@@ -481,8 +592,20 @@ function createCloudNoise({
       const generationLow = lerp(0.62, 0.36, cloudNoise.coverage);
       const generationHigh = lerp(0.82, 0.58, cloudNoise.coverage);
 
-      const cloudValue = base * 0.9 + detail * 0.22 - erode * cloudNoise.erosionStrength;
-      const cloudMask = MathUtils.smoothstep(cloudValue, generationLow, generationHigh);
+      const terrestrialCloudValue = base * 0.9 + terrestrialDetail * 0.22 - erode * cloudNoise.erosionStrength;
+
+      const detail = isGaseous ? gasGiantDetail : terrestrialDetail;
+      const cloudValue = isGaseous ? gasGiantCloudValue : terrestrialCloudValue;
+
+      const gasGiantCloudMask = MathUtils.clamp(
+        softBandHaze + highCloudStreaks * 0.42,
+         0,
+         0.78
+      );
+      const terrestrialCloudMask = MathUtils.smoothstep(cloudValue, generationLow, generationHigh);
+
+      const cloudMask = isGaseous ? gasGiantCloudMask : terrestrialCloudMask;
+
       const clamped = MathUtils.clamp(cloudMask, 0, 1);
 
       // Calculate pixel index (based on current position in loop)
@@ -501,7 +624,14 @@ function createCloudNoise({
       greyscaleImage.data[i + 2] = grey; // B
       greyscaleImage.data[i + 3] = 255; // A
 
-      const brightness = MathUtils.clamp(0.68 + detail * 0.22 + base * 0.12, 0.62, 1.0);
+      const gasGiantBrightness = MathUtils.clamp(
+          0.78 + gasGiantCloudValue * 0.18 + gasGiantDetail * 0.08,
+          0.72,
+          1.0
+      );
+      const terrestrialBrightness = MathUtils.clamp(0.68 + detail * 0.22 + base * 0.12, 0.62, 1.0);
+
+      const brightness = isGaseous ? gasGiantBrightness : terrestrialBrightness;
 
       colorImage.data[i] = brightness * 255; // R
       colorImage.data[i + 1] = brightness * 255; // G
@@ -519,7 +649,9 @@ function createCloudNoiseTexture({
   size,
   noiseFunction,
   warpNoiseFunction,
-  cloudNoise
+  cloudNoise,
+  isGaseous = false,
+  atmosphericActivity = 0.25
 }: CloudNoiseTextureOptions): NoiseTextures {
   greyscaleCanvas.width = size;
   greyscaleCanvas.height = size;
@@ -544,7 +676,9 @@ function createCloudNoiseTexture({
     colorImage,
     noiseFunction,
     warpNoiseFunction,
-    cloudNoise
+    cloudNoise,
+    isGaseous,
+    atmosphericActivity
   });
 
   const normalImage = getNormalImageFromHeight(greyscaleImage, size, 2);
@@ -580,7 +714,7 @@ function createCloudNoiseTexture({
   };
 }
 
-export function getPlanetTextures({ seed, surfaceNoise, cloudNoise, size = 512, colorPalette }: PlanetTextureOptions) {
+export function getPlanetTextures({ seed, surfaceNoise, cloudNoise, size = 512, colorPalette, isGaseous, atmosphericActivity }: PlanetTextureOptions) {
     const noiseFunction = createNoise3D(seedrandom(seed));
     const warpNoiseFunction = createNoise3D(seedrandom(seed + "-warp"));
     // Separate seed for clouds to separate from surface noise values
@@ -610,6 +744,8 @@ export function getPlanetTextures({ seed, surfaceNoise, cloudNoise, size = 512, 
       noiseFunction,
       warpNoiseFunction,
       surfaceNoise,
+      isGaseous,
+      atmosphericActivity
     });
 
     /**
@@ -633,7 +769,9 @@ export function getPlanetTextures({ seed, surfaceNoise, cloudNoise, size = 512, 
         size,
         noiseFunction: cloudNoiseFunction,
         warpNoiseFunction: cloudWarpNoiseFunction,
-        cloudNoise
+        cloudNoise,
+        isGaseous,
+        atmosphericActivity
     })
 
     return {

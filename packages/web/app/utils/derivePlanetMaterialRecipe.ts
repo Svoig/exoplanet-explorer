@@ -132,10 +132,12 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
         : clamp(0.32 + atmosphereMassProxy * 0.45 - tempNormalized * 0.25, 0.02, 0.65);
 
     const cloudOpacity = isGaseous
-         ? lerp(0.42, 0.72, cloudCoverage)
+         ? lerp(0.10, 0.22, cloudCoverage)
          : lerp(0.18, 0.52, cloudCoverage);
         
-    const cloudAlphaHigh = lerp(0.76, 0.52, cloudCoverage);
+    const cloudAlphaHigh = isGaseous
+        ? lerp(0.62, 0.52, cloudCoverage)
+        : lerp(0.76, 0.52, cloudCoverage);
 
     const cloudWarpAmount = isGaseous
         ? lerp(0.32, 0.62, atmosphericActivity)
@@ -218,7 +220,8 @@ export function derivePlanetMaterialRecipe(planet: Planet): PlanetMaterialRecipe
             fresnelPower: isGaseous ? 2.7 : 4.8,
             opacity: atmosphereOpacity,
             // AI said 1.1 for gaseous, but 1.02 looks better to me (see toi-1408-b)
-            thickness: isGaseous ? 0.0125 : 0.0135
+            thickness: isGaseous ? 0.0125 : 0.0135,
+            activity: atmosphericActivity,
         }
     };
 
